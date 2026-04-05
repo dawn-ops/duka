@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DukaSmart — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --c1: #FF6B35;
+    --c2: #FFD23F;
+    --c3: #06D6A0;
+    --c4: #118AB2;
+    --c5: #EF476F;
+    --bg: #0A0A0A;
+    --surface: #161616;
+    --surface2: #202020;
+    --surface3: #2A2A2A;
+    --border: rgba(255,255,255,0.07);
+    --text: #F0F0EC;
+    --muted: rgba(240,240,236,0.45);
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* SIDEBAR NAV */
+  .side-nav {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    flex-shrink: 0;
+  }
+
+  .side-logo {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-badge {
+    background: rgba(255,107,53,0.15);
+    border: 1px solid rgba(255,107,53,0.3);
+    color: var(--c1);
+    font-size: 0.62rem;
+    font-weight: 700;
+    font-family: var(--font-head);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 99px;
+  }
+
+  .logo-text {
+    font-family: var(--font-head);
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+  .logo-text span { color: var(--c1); }
+
+  .nav-section { padding: 1.5rem 1rem 0.5rem; }
+  .nav-label { font-size: 0.65rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; padding: 0 0.5rem; margin-bottom: 6px; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--muted);
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(255,107,53,0.15); color: var(--c1); font-weight: 500; }
+  .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  .nav-bottom {
+    margin-top: auto;
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.15s;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+  }
+  .btn-back:hover { background: var(--surface3); color: var(--text); }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    max-width: 900px;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+    animation: fadeUp 0.4s ease both;
+  }
+  .page-header h1 {
+    font-family: var(--font-head);
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+  .page-header p { color: var(--muted); font-size: 0.88rem; margin-top: 4px; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  .panel { display: none; animation: fadeUp 0.3s ease both; }
+  .panel.active { display: block; }
+
+  /* SECTIONS */
+  .settings-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .settings-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .settings-card:nth-of-type(1)::before { background: linear-gradient(90deg, var(--c1), var(--c2)); }
+  .settings-card:nth-of-type(2)::before { background: linear-gradient(90deg, var(--c3), var(--c4)); }
+  .settings-card:nth-of-type(3)::before { background: linear-gradient(90deg, var(--c2), var(--c5)); }
+  .settings-card:nth-of-type(4)::before { background: linear-gradient(90deg, var(--c4), var(--c3)); }
+  .settings-card:nth-of-type(5)::before { background: linear-gradient(90deg, var(--c5), var(--c1)); }
+
+  .card-title {
+    font-family: var(--font-head);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .field { margin-bottom: 1rem; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 0.73rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+
+  input[type=text], input[type=number], select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    padding: 11px 14px;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--c1);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+  }
+  select option { background: #161616; }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* COLOR PALETTE */
+  .color-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 8px; }
+  .color-swatch {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch.selected { border-color: white; transform: scale(1.1); }
+
+  /* CATEGORY MANAGER */
+  .cat-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .cat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .cat-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); }
+  .cat-name { flex: 1; font-size: 0.88rem; }
+  .cat-del { background: none; border: none; color: rgba(239,71,111,0.5); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 6px; transition: all 0.15s; }
+  .cat-del:hover { color: var(--c5); background: rgba(239,71,111,0.1); }
+
+  .add-row { display: flex; gap: 8px; }
+  .add-row input { flex: 1; }
+  .add-row input[type=color] { width: 48px; padding: 4px; cursor: pointer; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); }
+
+  /* PRODUCT LIST */
+  .prod-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 40px; }
+  .prod-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+  }
+  .prod-chip button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0 2px; }
+  .prod-chip button:hover { color: var(--c5); }
+
+  /* THEME PREVIEW */
+  .theme-preview {
+    background: var(--surface2);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+  }
+  .preview-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+  .preview-logo { font-family: var(--font-head); font-weight: 800; font-size: 1rem; }
+  .preview-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .preview-card { border-radius: 8px; padding: 8px; font-size: 0.7rem; }
+  .preview-card .pv { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-top: 2px; }
+
+  /* DANGER ZONE */
+  .danger-card {
+    background: rgba(239,71,111,0.05);
+    border: 1px solid rgba(239,71,111,0.2);
+    border-radius: 20px;
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .danger-card .card-title { color: var(--c5); }
+
+  /* BUTTONS */
+  .btn-save {
+    background: linear-gradient(135deg, var(--c1), #FF8C42);
+    border: none;
+    color: #fff;
+    font-family: var(--font-head);
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 12px 28px;
+    border-radius: 10px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: all 0.2s;
+  }
+  .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,53,0.35); }
+
+  .btn-outline {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-outline:hover { background: var(--surface3); }
+
+  .btn-danger {
+    background: rgba(239,71,111,0.1);
+    border: 1px solid rgba(239,71,111,0.3);
+    color: var(--c5);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-danger:hover { background: rgba(239,71,111,0.2); }
+
+  .btn-add-sm {
+    background: rgba(6,214,160,0.15);
+    border: 1px solid rgba(6,214,160,0.3);
+    color: var(--c3);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .btn-add-sm:hover { background: rgba(6,214,160,0.25); }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+
+  /* STATS TABLE */
+  .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .stat-box { background: var(--surface2); border-radius: 12px; padding: 1rem; }
+  .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .stat-val { font-family: var(--font-head); font-size: 1.5rem; font-weight: 700; }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-label { width: 130px; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+  .bar-track { flex:1; height: 8px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+  .bar-amt { width: 90px; text-align:right; font-size: 0.8rem; font-family: var(--font-head); font-weight:600; }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    background: var(--c3);
+    color: #0A0A0A;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 12px 22px;
+    border-radius: 99px;
+    box-shadow: 0 8px 30px rgba(6,214,160,0.4);
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 768px) {
+    .side-nav { display: none; }
+    .main { padding: 1rem; }
+    .two-col { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR NAV -->
+<div class="side-nav">
+  <div class="side-logo">
+    <div>
+      <div class="logo-text">Duka<span>Smart</span></div>
+      <div class="admin-badge" style="margin-top:4px;">Admin Panel</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Settings</div>
+    <button class="nav-item active" onclick="showPanel('store')"><span class="icon">🏪</span> Store Info</button>
+    <button class="nav-item" onclick="showPanel('categories')"><span class="icon">🏷</span> Categories</button>
+    <button class="nav-item" onclick="showPanel('products')"><span class="icon">📦</span> Products</button>
+    <button class="nav-item" onclick="showPanel('theme')"><span class="icon">🎨</span> Theme & Colors</button>
+    <button class="nav-item" onclick="showPanel('payments')"><span class="icon">💳</span> Payment Methods</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Analytics</div>
+    <button class="nav-item" onclick="showPanel('analytics')"><span class="icon">📊</span> Dashboard</button>
+    <button class="nav-item" onclick="showPanel('data')"><span class="icon">🗂</span> Data & Export</button>
+  </div>
+
+  <div class="nav-bottom">
+    <a href="index.html" class="btn-back">← Back to Main App</a>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- STORE INFO -->
+  <div class="panel active" id="panel-store">
+    <div class="page-header">
+      <h1>Store Information</h1>
+      <p>Customize how your store appears across the app</p>
+    </div>
+
+    <div class="settings-card">
+      <div class="card-title">🏪 Basic Details</div>
+      <div class="two-col">
+        <div class="field">
+          <label>Store Name</label>
+          <input type="text" id="cfg-name" placeholder="e.g. DukaSmart" />
+        </div>
+        <div class="field">
+          <label>Currency</label>
+          <select id="cfg-currency">
+            <option value="KES">KES — Kenyan Shilling</option>
+            <option value="UGX">UGX — Ugandan Shilling</option>
+            <option value="TZS">TZS — Tanzanian Shilling</option>
+            <option value="USD">USD — US Dollar</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="ZAR">ZAR — South African Rand</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Store Tagline</label>
+        <input type="text" id="cfg-tagline" placeholder="Short description shown on homepage" />
+      </div>
+      <div class="field">
+        <label>Owner / Manager Name</label>
+        <input type="text" id="cfg-owner" placeholder="Your name" />
+      </div>
+      <div class="field">
+        <label>Contact Phone</label>
+        <input type="text" id="cfg-phone" placeholder="+254…" />
+      </div>
+      <div class="actions-row">
+        <button class="btn-save" onclick="saveStoreInfo()">Save Changes</button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="card-title">📅 Date & Time</div>
+      <div class="two-col">
+        <div class="field">
+          <label>Date Format</label>
+          <select id="cfg-datefmt">
+            <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
+            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Default Payment Method</label>
+          <select id="cfg-defpay">
+            <option value="Cash">Cash</option>
+            <option value="M-Pesa">M-Pesa</option>
+            <option value="Bank">Bank</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions-row">
+        <button class="btn-save" onclick="saveStoreInfo()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="panel" id="panel-categories">
+    <div class="page-header">
+      <h1>Categories</h1>
+      <p>Add, remove and colour-code purchase categories</p>
+    </div>
+
+    <div class="settings-card">
+      <div class="card-title">🏷 Category List</div>
+      <div class="cat-list" id="cat-list"></div>
+      <div class="add-row">
+        <input type="text" id="new-cat-name" placeholder="New category name…" />
+        <input type="color" id="new-cat-color" value="#06D6A0" title="Pick colour" />
+        <button class="btn-add-sm" onclick="addCategory()">+ Add</button>
+      </div>
+      <div class="actions-row">
+        <button class="btn-save" onclick="saveCategories()">Save Categories</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="panel" id="panel-products">
+    <div class="page-header">
+      <h1>Product Catalogue</h1>
+      <p>Quick-fill suggestions shown in the product name field</p>
+    </div>
+
+    <div class="settings-card">
+      <div class="card-title">📦 Product Suggestions</div>
+      <div class="prod-list" id="prod-list"></div>
+      <div class="add-row">
+        <input type="text" id="new-prod" placeholder="Add a product name…" onkeydown="if(event.key==='Enter') addProduct()" />
+        <button class="btn-add-sm" onclick="addProduct()">+ Add</button>
+      </div>
+      <div class="actions-row">
+        <button class="btn-save" onclick="saveProducts()">Save Products</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME -->
+  <div class="panel" id="panel-theme">
+    <div class="page-header">
+      <h1>Theme & Colors</h1>
+      <p>Pick accent colours that define your app's look</p>
+    </div>
+
+    <div class="settings-card">
+      <div class="card-title">🎨 Accent Color Palette</div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">These 5 colors are used throughout the UI — for metrics, gradients and highlights.</p>
+      <div id="theme-color-pickers" style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;"></div>
+
+      <div class="card-title" style="margin-top:1rem;">Live Preview</div>
+      <div class="theme-preview" id="theme-preview">
+        <div class="preview-nav">
+          <div class="preview-logo" id="pv-logo">DukaSmart</div>
+          <div style="font-size:0.7rem;color:var(--muted)">Admin Panel</div>
+        </div>
+        <div class="preview-cards" id="pv-cards"></div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn-save" onclick="saveTheme()">Save Theme</button>
+        <button class="btn-outline" onclick="resetTheme()">Reset Defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div class="panel" id="panel-payments">
+    <div class="page-header">
+      <h1>Payment Methods</h1>
+      <p>Control which payment options appear during purchase recording</p>
+    </div>
+
+    <div class="settings-card">
+      <div class="card-title">💳 Active Methods</div>
+      <div id="payment-list" class="prod-list"></div>
+      <div class="add-row">
+        <input type="text" id="new-payment" placeholder="Add payment method…" onkeydown="if(event.key==='Enter') addPayment()" />
+        <button class="btn-add-sm" onclick="addPayment()">+ Add</button>
+      </div>
+      <div class="actions-row">
+        <button class="btn-save" onclick="savePayments()">Save Methods</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="panel" id="panel-analytics">
+    <div class="page-header">
+      <h1>Analytics Dashboard</h1>
+      <p>Overview of your purchase data</p>
+    </div>
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="settings-card">
+      <div class="card-title">📊 Spend by Category</div>
+      <div class="bar-chart" id="bar-chart"></div>
+    </div>
+    <div class="settings-card">
+      <div class="card-title">📅 Top Products (All Time)</div>
+      <div class="bar-chart" id="top-products"></div>
+    </div>
+  </div>
+
+  <!-- DATA -->
+  <div class="panel" id="panel-data">
+    <div class="page-header">
+      <h1>Data & Export</h1>
+      <p>Export, import or clear your purchase data</p>
+    </div>
+
+    <div class="settings-card">
+      <div class="card-title">📤 Export</div>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem;">Download all purchase records as a CSV file that opens in Excel or Google Sheets.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-save" onclick="exportCSV()">⬇ Export All as CSV</button>
+        <button class="btn-outline" onclick="exportJSON()">⬇ Export as JSON</button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="card-title">📥 Import</div>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem;">Import purchase records from a JSON backup file.</p>
+      <input type="file" id="import-file" accept=".json" onchange="importJSON(event)" style="background:var(--surface2);border:1px dashed rgba(255,255,255,0.2);padding:12px;" />
+    </div>
+
+    <div class="danger-card">
+      <div class="card-title">⚠ Danger Zone</div>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;">These actions are <strong style="color:var(--c5);">irreversible</strong>. Proceed with caution.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-danger" onclick="clearEntries()">🗑 Delete All Purchases</button>
+        <button class="btn-danger" onclick="clearConfig()">🔄 Reset All Settings</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast">Saved!</div>
+
+<script>
+const STORE_KEY = 'dukasmart_entries';
+const CFG_KEY   = 'dukasmart_config';
+
+const DEFAULT_CFG = {
+  storeName: 'DukaSmart',
+  tagline: 'Your smart store companion — fast, clean, always on.',
+  currency: 'KES',
+  owner: '',
+  phone: '',
+  datefmt: 'YYYY-MM-DD',
+  defaultPayment: 'Cash',
+  categories: [
+    {name:'Groceries', color:'#FF6B35'},
+    {name:'Beverages', color:'#FFD23F'},
+    {name:'Cleaning', color:'#06D6A0'},
+    {name:'Stationery', color:'#118AB2'},
+    {name:'Electronics', color:'#EF476F'},
+    {name:'Fresh Produce', color:'#8AC926'},
+  ],
+  products: ['Unga Pembe 2kg','Cooking Oil 1L','Sugar 1kg','Rice 5kg','Milk 500ml','Bread'],
+  payments: ['Cash','M-Pesa','Bank','Credit'],
+  colors: ['#FF6B35','#FFD23F','#06D6A0','#118AB2','#EF476F'],
+};
+
+let cfg = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_CFG)), JSON.parse(localStorage.getItem(CFG_KEY) || '{}'));
+let entries = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+
+function saveCfg() {
+  fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(cfg)}).catch(()=>{}); localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  showToast('✓ Saved successfully!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'analytics') renderAnalytics();
+  if (name === 'theme') renderTheme();
+}
+
+/* ---- STORE INFO ---- */
+function loadStoreInfo() {
+  document.getElementById('cfg-name').value = cfg.storeName;
+  document.getElementById('cfg-tagline').value = cfg.tagline;
+  document.getElementById('cfg-currency').value = cfg.currency;
+  document.getElementById('cfg-owner').value = cfg.owner || '';
+  document.getElementById('cfg-phone').value = cfg.phone || '';
+  document.getElementById('cfg-datefmt').value = cfg.datefmt || 'YYYY-MM-DD';
+  document.getElementById('cfg-defpay').value = cfg.defaultPayment || 'Cash';
+}
+
+function saveStoreInfo() {
+  cfg.storeName = document.getElementById('cfg-name').value.trim() || 'DukaSmart';
+  cfg.tagline = document.getElementById('cfg-tagline').value.trim();
+  cfg.currency = document.getElementById('cfg-currency').value;
+  cfg.owner = document.getElementById('cfg-owner').value.trim();
+  cfg.phone = document.getElementById('cfg-phone').value.trim();
+  cfg.datefmt = document.getElementById('cfg-datefmt').value;
+  cfg.defaultPayment = document.getElementById('cfg-defpay').value;
+  saveCfg();
+}
+
+/* ---- CATEGORIES ---- */
+function renderCategories() {
+  const list = document.getElementById('cat-list');
+  if (!cfg.categories.length) { list.innerHTML = '<div style="font-size:0.85rem;color:var(--muted);padding:8px 0;">No categories yet.</div>'; return; }
+  list.innerHTML = cfg.categories.map((c, i) => `
+    <div class="cat-item">
+      <input type="color" class="cat-dot" value="${c.color}" onchange="cfg.categories[${i}].color=this.value" title="Change colour" />
+      <span class="cat-name">${c.name}</span>
+      <button class="cat-del" onclick="deleteCategory(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addCategory() {
+  const name = document.getElementById('new-cat-name').value.trim();
+  if (!name) return;
+  const color = document.getElementById('new-cat-color').value;
+  cfg.categories.push({name, color});
+  document.getElementById('new-cat-name').value = '';
+  renderCategories();
+}
+
+function deleteCategory(i) {
+  cfg.categories.splice(i, 1);
+  renderCategories();
+}
+
+function saveCategories() { saveCfg(); }
+
+/* ---- PRODUCTS ---- */
+function renderProducts() {
+  const list = document.getElementById('prod-list');
+  list.innerHTML = cfg.products.map((p, i) => `
+    <span class="prod-chip">
+      ${p}
+      <button onclick="deleteProduct(${i})">✕</button>
+    </span>
+  `).join('');
+}
+
+function addProduct() {
+  const val = document.getElementById('new-prod').value.trim();
+  if (!val) return;
+  if (!cfg.products.includes(val)) cfg.products.push(val);
+  document.getElementById('new-prod').value = '';
+  renderProducts();
+}
+
+function deleteProduct(i) {
+  cfg.products.splice(i, 1);
+  renderProducts();
+}
+
+function saveProducts() { saveCfg(); }
+
+/* ---- PAYMENTS ---- */
+function renderPayments() {
+  const list = document.getElementById('payment-list');
+  list.innerHTML = (cfg.payments || ['Cash','M-Pesa','Bank','Credit']).map((p, i) => `
+    <span class="prod-chip">
+      ${p}
+      <button onclick="deletePayment(${i})">✕</button>
+    </span>
+  `).join('');
+}
+
+function addPayment() {
+  const val = document.getElementById('new-payment').value.trim();
+  if (!val) return;
+  if (!cfg.payments) cfg.payments = [];
+  if (!cfg.payments.includes(val)) cfg.payments.push(val);
+  document.getElementById('new-payment').value = '';
+  renderPayments();
+}
+
+function deletePayment(i) {
+  cfg.payments.splice(i, 1);
+  renderPayments();
+}
+
+function savePayments() { saveCfg(); }
+
+/* ---- THEME ---- */
+const COLOR_LABELS = ['Primary Accent','Secondary / Highlight','Success / Positive','Info / Blue','Alert / Red'];
+
+function renderTheme() {
+  const pickers = document.getElementById('theme-color-pickers');
+  pickers.innerHTML = (cfg.colors || DEFAULT_CFG.colors).map((c, i) => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <input type="color" value="${c}" onchange="cfg.colors[${i}]=this.value;updateThemePreview()" style="width:56px;height:56px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:${c};" title="${COLOR_LABELS[i]}" />
+      <span style="font-size:0.68rem;color:var(--muted);text-align:center;max-width:60px;">${COLOR_LABELS[i]}</span>
+    </div>
+  `).join('');
+  updateThemePreview();
+}
+
+function updateThemePreview() {
+  const colors = cfg.colors || DEFAULT_CFG.colors;
+  document.getElementById('pv-logo').style.background = `linear-gradient(90deg, ${colors[0]}, ${colors[1]})`;
+  document.getElementById('pv-logo').style.webkitBackgroundClip = 'text';
+  document.getElementById('pv-logo').style.webkitTextFillColor = 'transparent';
+  const labels = ["Today's Spend","Items","Categories","This Month"];
+  document.getElementById('pv-cards').innerHTML = labels.map((l, i) => `
+    <div class="preview-card" style="background:${colors[i%colors.length]}18;border:1px solid ${colors[i%colors.length]}33;">
+      <div style="font-size:0.6rem;color:rgba(240,240,236,0.5);">${l}</div>
+      <div class="pv" style="color:${colors[i%colors.length]};">0</div>
+    </div>
+  `).join('');
+}
+
+function saveTheme() { saveCfg(); }
+
+function resetTheme() {
+  cfg.colors = [...DEFAULT_CFG.colors];
+  renderTheme();
+  showToast('Theme reset to defaults');
+}
+
+/* ---- ANALYTICS ---- */
+function fmt(n) { return (cfg.currency||'KES') + ' ' + Number(n).toLocaleString('en-KE', {minimumFractionDigits:0,maximumFractionDigits:0}); }
+
+function renderAnalytics() {
+  const total = entries.reduce((a,e) => a+e.total, 0);
+  const td = new Date().toISOString().slice(0,10);
+  const todayTotal = entries.filter(e=>e.date===td).reduce((a,e)=>a+e.total,0);
+  const month = new Date().toISOString().slice(0,7);
+  const monthTotal = entries.filter(e=>e.date.startsWith(month)).reduce((a,e)=>a+e.total,0);
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-box"><div class="stat-label">All-Time Spend</div><div class="stat-val" style="color:#FF6B35;">${fmt(total)}</div></div>
+    <div class="stat-box"><div class="stat-label">This Month</div><div class="stat-val" style="color:#FFD23F;">${fmt(monthTotal)}</div></div>
+    <div class="stat-box"><div class="stat-label">Today</div><div class="stat-val" style="color:#06D6A0;">${fmt(todayTotal)}</div></div>
+    <div class="stat-box"><div class="stat-label">Total Entries</div><div class="stat-val" style="color:#118AB2;">${entries.length}</div></div>
+    <div class="stat-box"><div class="stat-label">Unique Products</div><div class="stat-val" style="color:#EF476F;">${new Set(entries.map(e=>e.product)).size}</div></div>
+    <div class="stat-box"><div class="stat-label">Days Logged</div><div class="stat-val">${new Set(entries.map(e=>e.date)).size}</div></div>
+  `;
+
+  // By category
+  const byCat = {};
+  entries.forEach(e => { byCat[e.category||'Uncategorised'] = (byCat[e.category||'Uncategorised']||0) + e.total; });
+  const catSorted = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const maxCat = catSorted[0]?.[1]||1;
+  document.getElementById('bar-chart').innerHTML = catSorted.map(([name,val]) => {
+    const col = (cfg.categories.find(c=>c.name===name)||{color:'#888'}).color;
+    return `<div class="bar-row">
+      <div class="bar-label">${name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/maxCat*100)}%;background:${col};"></div></div>
+      <div class="bar-amt" style="color:${col};">${fmt(val)}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:0.85rem;padding:1rem 0;">No data yet</div>';
+
+  // By product
+  const byProd = {};
+  entries.forEach(e => { byProd[e.product] = (byProd[e.product]||0) + e.total; });
+  const prodSorted = Object.entries(byProd).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxProd = prodSorted[0]?.[1]||1;
+  document.getElementById('top-products').innerHTML = prodSorted.map(([name,val], i) => {
+    const colors = cfg.colors || DEFAULT_CFG.colors;
+    const col = colors[i % colors.length];
+    return `<div class="bar-row">
+      <div class="bar-label">${name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/maxProd*100)}%;background:${col};"></div></div>
+      <div class="bar-amt" style="color:${col};">${fmt(val)}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:0.85rem;padding:1rem 0;">No data yet</div>';
+}
+
+/* ---- DATA ---- */
+function today() { return new Date().toISOString().slice(0,10); }
+
+function exportCSV() {
+  const header = ['Date','Product','Category','Qty','Unit','Unit Price','Total','Payment','Supplier','Notes'];
+  const rows = entries.map(e => [e.date,e.product,e.category,e.qty,e.unit,e.price,e.total,e.payment,e.supplier,e.notes]);
+  const csv = [header,...rows].map(r=>r.map(x=>`"${String(x||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'purchases_' + today() + '.csv';
+  a.click();
+  showToast('CSV exported!');
+}
+
+function exportJSON() {
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(entries, null, 2));
+  a.download = 'purchases_' + today() + '.json';
+  a.click();
+  showToast('JSON exported!');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) { alert('Invalid JSON format.'); return; }
+      if (!confirm(`Import ${data.length} records? This will ADD to existing data.`)) return;
+      entries = entries.concat(data);
+      localStorage.setItem(STORE_KEY, JSON.stringify(entries));
+      showToast(`✓ Imported ${data.length} records!`);
+    } catch { alert('Could not parse the file. Please use a valid JSON backup.'); }
+  };
+  reader.readAsText(file);
+}
+
+function clearEntries() {
+  if (!confirm('Delete ALL purchase records? This cannot be undone!')) return;
+  if (!confirm('Are you absolutely sure? All data will be lost.')) return;
+  localStorage.removeItem(STORE_KEY);
+  entries = [];
+  showToast('All purchases deleted');
+}
+
+function clearConfig() {
+  if (!confirm('Reset all settings to defaults?')) return;
+  localStorage.removeItem(CFG_KEY);
+  cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
+  loadAll();
+  showToast('Settings reset');
+}
+
+/* ---- INIT ---- */
+function loadAll() {
+  loadStoreInfo();
+  renderCategories();
+  renderProducts();
+  renderPayments();
+}
+
+loadAll();
+</script>
+</body>
+</html>
