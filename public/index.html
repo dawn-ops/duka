@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DukaSmart — Daily Purchases</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --c1: #FF6B35; --c2: #FFD23F; --c3: #06D6A0; --c4: #118AB2; --c5: #EF476F;
+    --bg: #0D0D0D; --surface: #1A1A1A; --surface2: #242424;
+    --border: rgba(255,255,255,0.08); --text: #F5F5F0; --muted: rgba(245,245,240,0.5);
+    --font-head: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
+    --radius: 16px; --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background: radial-gradient(ellipse 60% 40% at 10% 20%, rgba(255,107,53,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 90% 80%, rgba(6,214,160,0.10) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255,210,63,0.06) 0%, transparent 70%);
+  }
+  .blob { position:fixed; border-radius:50%; filter:blur(80px); opacity:0.15; pointer-events:none; animation:drift 12s ease-in-out infinite alternate; z-index:0; }
+  .blob-1 { width:400px; height:400px; background:var(--c1); top:-100px; left:-100px; }
+  .blob-2 { width:300px; height:300px; background:var(--c3); bottom:-50px; right:-50px; animation-delay:-5s; }
+  .blob-3 { width:250px; height:250px; background:var(--c2); top:50%; left:60%; animation-delay:-3s; }
+  @keyframes drift { from{transform:translate(0,0) scale(1)} to{transform:translate(30px,20px) scale(1.05)} }
+
+  nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:rgba(13,13,13,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+  .logo { font-family:var(--font-head); font-size:1.5rem; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .logo-dot { width:10px; height:10px; background:var(--c1); border-radius:50%; display:inline-block; animation:pulse 2s ease-in-out infinite; }
+  .logo span { color:var(--c1); }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:0.7} }
+  .nav-right { display:flex; align-items:center; gap:12px; }
+  .nav-date { font-size:0.8rem; color:var(--muted); }
+  .btn-admin { background:var(--surface2); color:var(--c2); border:1px solid rgba(255,210,63,0.3); padding:8px 18px; border-radius:99px; font-size:0.82rem; font-family:var(--font-head); font-weight:600; text-decoration:none; transition:all 0.2s; letter-spacing:0.03em; }
+  .btn-admin:hover { background:rgba(255,210,63,0.15); border-color:var(--c2); transform:translateY(-1px); }
+
+  .sync-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(6,214,160,0.1); border:1px solid rgba(6,214,160,0.25); color:var(--c3); font-size:0.72rem; font-weight:600; padding:5px 12px; border-radius:99px; }
+  .sync-dot { width:6px; height:6px; border-radius:50%; background:var(--c3); animation:pulse 2s infinite; }
+  .sync-badge.offline { background:rgba(239,71,111,0.1); border-color:rgba(239,71,111,0.25); color:var(--c5); }
+  .sync-badge.offline .sync-dot { background:var(--c5); animation:none; }
+
+  .hero { position:relative; z-index:1; text-align:center; padding:3rem 2rem 2rem; }
+  .hero-tag { display:inline-block; background:rgba(255,107,53,0.15); border:1px solid rgba(255,107,53,0.3); color:var(--c1); font-size:0.75rem; font-weight:600; font-family:var(--font-head); letter-spacing:0.12em; text-transform:uppercase; padding:6px 16px; border-radius:99px; margin-bottom:1rem; animation:fadeUp 0.6s ease both; }
+  .hero h1 { font-family:var(--font-head); font-size:clamp(2rem,5vw,3.5rem); font-weight:800; line-height:1.1; animation:fadeUp 0.6s 0.1s ease both; }
+  .hero h1 em { font-style:normal; color:var(--c1); position:relative; }
+  .hero h1 em::after { content:''; position:absolute; bottom:2px; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--c1),var(--c2)); border-radius:2px; }
+  .hero p { color:var(--muted); font-size:1rem; margin-top:0.75rem; animation:fadeUp 0.6s 0.2s ease both; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  .metrics { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:0 2rem 2rem; max-width:1100px; margin:0 auto; animation:fadeUp 0.6s 0.3s ease both; }
+  .metric-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.2rem 1.5rem; position:relative; overflow:hidden; transition:transform 0.2s; }
+  .metric-card:hover { transform:translateY(-2px); }
+  .metric-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .metric-card:nth-child(1)::before { background:linear-gradient(90deg,var(--c1),var(--c2)); }
+  .metric-card:nth-child(2)::before { background:linear-gradient(90deg,var(--c3),var(--c4)); }
+  .metric-card:nth-child(3)::before { background:linear-gradient(90deg,var(--c2),var(--c1)); }
+  .metric-card:nth-child(4)::before { background:linear-gradient(90deg,var(--c5),var(--c1)); }
+  .metric-label { font-size:0.72rem; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+  .metric-value { font-family:var(--font-head); font-size:1.8rem; font-weight:700; }
+
+  .main-grid { position:relative; z-index:1; display:grid; grid-template-columns:1fr 400px; gap:20px; padding:0 2rem 3rem; max-width:1100px; margin:0 auto; animation:fadeUp 0.6s 0.4s ease both; }
+  .form-card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:2rem; position:relative; overflow:hidden; }
+  .form-card::after { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:radial-gradient(circle,rgba(255,107,53,0.08),transparent 70%); pointer-events:none; }
+  .section-title { font-family:var(--font-head); font-size:1.1rem; font-weight:700; margin-bottom:1.5rem; display:flex; align-items:center; gap:10px; }
+  .section-title .dot { width:8px; height:8px; border-radius:50%; background:var(--c1); }
+  .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field.full { grid-column:1/-1; }
+  label { font-size:0.75rem; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
+  input, select, textarea { background:var(--surface2); border:1px solid var(--border); color:var(--text); font-family:var(--font-body); font-size:0.92rem; padding:12px 14px; border-radius:12px; outline:none; transition:border-color 0.2s,box-shadow 0.2s; width:100%; }
+  input:focus, select:focus, textarea:focus { border-color:var(--c1); box-shadow:0 0 0 3px rgba(255,107,53,0.12); }
+  select option { background:#1A1A1A; }
+  textarea { resize:vertical; min-height:70px; }
+  .qty-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  .total-display { background:linear-gradient(135deg,rgba(255,107,53,0.15),rgba(255,210,63,0.1)); border:1px solid rgba(255,107,53,0.3); border-radius:12px; padding:14px; display:flex; justify-content:space-between; align-items:center; margin:14px 0; }
+  .total-display .label { font-size:0.8rem; color:var(--muted); }
+  .total-display .amount { font-family:var(--font-head); font-size:1.5rem; font-weight:700; color:var(--c2); }
+  .btn-add { width:100%; background:linear-gradient(135deg,var(--c1),#FF8C42); border:none; color:#fff; font-family:var(--font-head); font-size:1rem; font-weight:700; padding:14px; border-radius:12px; cursor:pointer; letter-spacing:0.04em; transition:all 0.2s; position:relative; overflow:hidden; }
+  .btn-add:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(255,107,53,0.4); }
+  .btn-add:active { transform:translateY(0); }
+  .btn-add:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+  .sidebar { display:flex; flex-direction:column; gap:16px; }
+  .sidebar-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:1.5rem; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .chip { background:var(--surface2); border:1px solid var(--border); color:var(--muted); font-size:0.78rem; font-weight:500; padding:6px 14px; border-radius:99px; cursor:pointer; transition:all 0.15s; }
+  .chip.active, .chip:hover { background:rgba(255,107,53,0.2); border-color:var(--c1); color:var(--c1); }
+  .entry-list { display:flex; flex-direction:column; gap:10px; margin-top:12px; max-height:320px; overflow-y:auto; }
+  .entry-list::-webkit-scrollbar { width:4px; }
+  .entry-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .entry-item { background:var(--surface2); border-radius:12px; padding:10px 14px; display:flex; align-items:center; gap:10px; animation:slideIn 0.3s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+  .entry-color { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .entry-info { flex:1; min-width:0; }
+  .entry-name { font-size:0.85rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .entry-meta { font-size:0.72rem; color:var(--muted); margin-top:1px; }
+  .entry-amount { font-family:var(--font-head); font-size:0.9rem; font-weight:700; color:var(--c2); white-space:nowrap; }
+  .btn-del { background:none; border:none; color:rgba(239,71,111,0.5); cursor:pointer; font-size:1rem; padding:2px 4px; border-radius:6px; transition:all 0.15s; }
+  .btn-del:hover { color:var(--c5); background:rgba(239,71,111,0.1); }
+  .empty-state { text-align:center; padding:1.5rem; color:var(--muted); font-size:0.85rem; }
+
+  .table-card { position:relative; z-index:1; background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:2rem; max-width:1100px; margin:0 auto 3rem; animation:fadeUp 0.6s 0.5s ease both; }
+  .table-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:12px; }
+  .search-wrap { position:relative; }
+  .search-wrap input { padding-left:36px; width:220px; }
+  .search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:0.9rem; }
+  .filter-group { display:flex; gap:8px; align-items:center; }
+  .filter-group select { width:auto; padding:10px 12px; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { text-align:left; font-size:0.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:10px 12px; border-bottom:1px solid var(--border); }
+  tbody tr { border-bottom:1px solid var(--border); transition:background 0.15s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:rgba(255,255,255,0.03); }
+  tbody td { padding:12px; font-size:0.88rem; vertical-align:middle; }
+  .cat-badge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:0.72rem; font-weight:600; }
+  .btn-export { background:rgba(6,214,160,0.15); border:1px solid rgba(6,214,160,0.3); color:var(--c3); font-family:var(--font-head); font-size:0.82rem; font-weight:600; padding:8px 18px; border-radius:99px; cursor:pointer; transition:all 0.2s; }
+  .btn-export:hover { background:rgba(6,214,160,0.25); transform:translateY(-1px); }
+
+  /* Payment badge */
+  .pay-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:0.72rem; font-weight:700; }
+  .pay-badge.mpesa { background:rgba(0,196,87,0.15); color:#00C457; border:1px solid rgba(0,196,87,0.3); }
+  .pay-badge.cash { background:rgba(255,210,63,0.15); color:#FFD23F; border:1px solid rgba(255,210,63,0.3); }
+  .pay-badge.bank { background:rgba(17,138,178,0.15); color:var(--c4); border:1px solid rgba(17,138,178,0.3); }
+  .pay-badge.other { background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid var(--border); }
+
+  /* M-Pesa Modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); z-index:500; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:2rem; width:100%; max-width:420px; position:relative; transform:translateY(20px) scale(0.97); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  .modal-overlay.open .modal { transform:translateY(0) scale(1); }
+  .modal-close { position:absolute; top:1rem; right:1rem; background:var(--surface2); border:none; color:var(--muted); width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+  .modal-close:hover { color:var(--text); }
+  .mpesa-logo { display:flex; align-items:center; gap:10px; margin-bottom:1.5rem; }
+  .mpesa-icon { width:44px; height:44px; background:linear-gradient(135deg,#00C457,#008a3e); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
+  .mpesa-title { font-family:var(--font-head); font-size:1.3rem; font-weight:800; }
+  .mpesa-title small { display:block; font-size:0.75rem; color:var(--muted); font-family:var(--font-body); font-weight:400; margin-top:1px; }
+  .mpesa-amount-display { background:linear-gradient(135deg,rgba(0,196,87,0.12),rgba(0,196,87,0.05)); border:1px solid rgba(0,196,87,0.2); border-radius:16px; padding:1.2rem; text-align:center; margin-bottom:1.5rem; }
+  .mpesa-amount-display .label { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+  .mpesa-amount-display .amount { font-family:var(--font-head); font-size:2.2rem; font-weight:800; color:#00C457; }
+  .btn-mpesa { width:100%; background:linear-gradient(135deg,#00C457,#00A048); border:none; color:#fff; font-family:var(--font-head); font-size:1rem; font-weight:700; padding:14px; border-radius:12px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-mpesa:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,196,87,0.35); }
+  .btn-mpesa:disabled { opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
+  .mpesa-status { text-align:center; padding:1rem 0; }
+  .mpesa-status .spinner { width:44px; height:44px; border:3px solid rgba(0,196,87,0.2); border-top-color:#00C457; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 1rem; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .mpesa-status .status-icon { font-size:3rem; margin-bottom:0.75rem; }
+  .mpesa-status h3 { font-family:var(--font-head); font-size:1.1rem; margin-bottom:0.5rem; }
+  .mpesa-status p { font-size:0.85rem; color:var(--muted); }
+
+  #toast { position:fixed; bottom:2rem; right:2rem; background:var(--c3); color:#0D0D0D; font-family:var(--font-head); font-weight:700; font-size:0.88rem; padding:12px 22px; border-radius:99px; box-shadow:0 8px 30px rgba(6,214,160,0.4); z-index:999; opacity:0; transform:translateY(20px); transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
+  #toast.show { opacity:1; transform:translateY(0); }
+  #toast.error { background:var(--c5); box-shadow:0 8px 30px rgba(239,71,111,0.4); }
+
+  @media (max-width:900px) { .main-grid{grid-template-columns:1fr} .metrics{grid-template-columns:1fr 1fr} }
+  @media (max-width:600px) { nav{padding:1rem} .hero{padding:2rem 1rem 1.5rem} .main-grid,.metrics,.table-card{padding-left:1rem;padding-right:1rem} .field-grid{grid-template-columns:1fr} .qty-row{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<nav>
+  <div class="logo"><span class="logo-dot"></span>Duka<span>Smart</span></div>
+  <div class="nav-right">
+    <span class="nav-date" id="nav-date"></span>
+    <span class="sync-badge" id="sync-badge"><span class="sync-dot"></span> Live</span>
+    <a href="admin.html" class="btn-admin">⚙ Admin</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">Daily Purchase Log</div>
+  <h1>Track every <em>purchase</em><br>in real time</h1>
+  <p id="store-tagline">Your smart store companion — fast, clean, always on.</p>
+</div>
+
+<div class="metrics">
+  <div class="metric-card"><div class="metric-label">Today's Spend</div><div class="metric-value" id="m-spend" style="color:var(--c1)">KES 0</div></div>
+  <div class="metric-card"><div class="metric-label">Items Bought</div><div class="metric-value" id="m-items" style="color:var(--c3)">0</div></div>
+  <div class="metric-card"><div class="metric-label">Categories</div><div class="metric-value" id="m-cats" style="color:var(--c2)">0</div></div>
+  <div class="metric-card"><div class="metric-label">This Month</div><div class="metric-value" id="m-month" style="color:var(--c5)">KES 0</div></div>
+</div>
+
+<div class="main-grid" style="padding-left:2rem;padding-right:2rem;">
+  <div class="form-card">
+    <div class="section-title"><span class="dot"></span> Add New Purchase</div>
+    <div class="field-grid">
+      <div class="field"><label>Date</label><input type="date" id="f-date" /></div>
+      <div class="field"><label>Supplier / Source</label><input type="text" id="f-supplier" placeholder="e.g. Naivas, Market…" /></div>
+      <div class="field full"><label>Product Name</label><input type="text" id="f-product" placeholder="e.g. Unga Pembe 2kg, Cooking Oil 1L…" list="product-suggestions" /><datalist id="product-suggestions"></datalist></div>
+      <div class="field"><label>Category</label><select id="f-category"><option value="">Select category…</option></select></div>
+      <div class="field"><label>Unit</label>
+        <select id="f-unit">
+          <option value="pcs">pcs</option><option value="kg">kg</option><option value="g">g</option>
+          <option value="litre">litre</option><option value="ml">ml</option><option value="bag">bag</option>
+          <option value="box">box</option><option value="crate">crate</option><option value="dozen">dozen</option><option value="pack">pack</option>
+        </select>
+      </div>
+    </div>
+    <div class="qty-row" style="margin-bottom:14px;">
+      <div class="field"><label>Quantity</label><input type="number" id="f-qty" min="0.01" step="any" value="1" /></div>
+      <div class="field"><label>Unit Price (KES)</label><input type="number" id="f-price" min="0" step="0.01" placeholder="0.00" /></div>
+      <div class="field"><label>Payment Method</label>
+        <select id="f-payment">
+          <option value="Cash">💵 Cash</option>
+          <option value="M-Pesa">📱 M-Pesa</option>
+          <option value="Bank">🏦 Bank Transfer</option>
+          <option value="Credit">💳 Credit</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;"><label>Notes</label><textarea id="f-notes" placeholder="Discount, quality note, invoice ref…"></textarea></div>
+    <div class="total-display">
+      <div><div class="label">Line Total</div><div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">qty × price</div></div>
+      <div class="amount" id="line-total">KES 0.00</div>
+    </div>
+    <button class="btn-add" id="btn-add" onclick="handleAddEntry()">+ Record Purchase</button>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-card">
+      <div class="section-title" style="margin-bottom:8px;"><span class="dot" style="background:var(--c3)"></span> Filter by Category</div>
+      <div class="chips" id="cat-chips"><div class="chip active" data-cat="" onclick="filterCat(this,'')">All</div></div>
+    </div>
+    <div class="sidebar-card" style="flex:1;">
+      <div class="section-title" style="margin-bottom:8px;"><span class="dot" style="background:var(--c2)"></span> Today's Entries</div>
+      <div class="entry-list" id="entry-list"><div class="empty-state">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card" style="margin-left:2rem;margin-right:2rem;">
+  <div class="table-header">
+    <div class="section-title" style="margin-bottom:0;"><span class="dot" style="background:var(--c4)"></span> Purchase History</div>
+    <div class="filter-group">
+      <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="tbl-search" placeholder="Search…" oninput="renderTable()" /></div>
+      <select id="tbl-date" onchange="renderTable()"><option value="">All dates</option></select>
+      <select id="tbl-cat" onchange="renderTable()"><option value="">All categories</option></select>
+      <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Date</th><th>Product</th><th>Category</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Supplier</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="tbl-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- M-Pesa STK Push Modal -->
+<div class="modal-overlay" id="mpesa-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeMpesaModal()">✕</button>
+    <div class="mpesa-logo">
+      <div class="mpesa-icon">📱</div>
+      <div class="mpesa-title">M-Pesa Payment<small>Send STK Push to customer's phone</small></div>
+    </div>
+    <div class="mpesa-amount-display">
+      <div class="label">Amount to Pay</div>
+      <div class="amount" id="mpesa-display-amount">KES 0</div>
+    </div>
+    <div id="mpesa-form-section">
+      <div class="field" style="margin-bottom:1rem;">
+        <label>Customer Phone Number</label>
+        <input type="tel" id="mpesa-phone" placeholder="e.g. 0712 345 678" style="font-size:1.1rem;padding:14px;" />
+        <small style="color:var(--muted);font-size:0.75rem;margin-top:4px;">Safaricom number that will receive the STK Push</small>
+      </div>
+      <button class="btn-mpesa" id="btn-mpesa-send" onclick="sendMpesaPayment()">
+        📲 Send Payment Request
+      </button>
+    </div>
+    <div id="mpesa-status-section" style="display:none;">
+      <div class="mpesa-status" id="mpesa-status-content">
+        <div class="spinner"></div>
+        <h3>Waiting for payment…</h3>
+        <p>Check your phone and enter your M-Pesa PIN</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── Config & State ─────────────────────────────────────────────────────────
+const API = ''; // Empty = same origin. Change to your server URL if different.
+const CFG_KEY = 'dukasmart_config';
+
+const DEFAULT_CFG = {
+  storeName: 'DukaSmart',
+  tagline: 'Your smart store companion — fast, clean, always on.',
+  currency: 'KES',
+  categories: [
+    {name:'Groceries', color:'#FF6B35'},
+    {name:'Beverages', color:'#FFD23F'},
+    {name:'Cleaning', color:'#06D6A0'},
+    {name:'Stationery', color:'#118AB2'},
+    {name:'Electronics', color:'#EF476F'},
+    {name:'Fresh Produce', color:'#8AC926'},
+  ],
+  products: ['Unga Pembe 2kg','Cooking Oil 1L','Sugar 1kg','Rice 5kg','Milk 500ml','Bread'],
+  defaultPayment: 'Cash',
+};
+
+let entries = [];
+let cfg = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem(CFG_KEY) || '{}'));
+let activeCat = '';
+let pendingEntry = null;   // entry waiting for M-Pesa confirmation
+let mpesaCheckoutId = null;
+let mpesaPollTimer = null;
+
+// ─── Utilities ───────────────────────────────────────────────────────────────
+function fmt(n) { return cfg.currency + ' ' + Number(n).toLocaleString('en-KE', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function today() { return new Date().toISOString().slice(0,10); }
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'error show' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 3000);
+}
+function setSyncBadge(live) {
+  const b = document.getElementById('sync-badge');
+  b.className = live ? 'sync-badge' : 'sync-badge offline';
+  b.innerHTML = live ? '<span class="sync-dot"></span> Live' : '<span class="sync-dot"></span> Offline';
+}
+
+// ─── API Calls ────────────────────────────────────────────────────────────────
+async function loadEntries() {
+  try {
+    const res = await fetch(API + '/api/entries');
+    if (!res.ok) throw new Error('Server error');
+    entries = await res.json();
+    setSyncBadge(true);
+    renderAll();
+  } catch (err) {
+    setSyncBadge(false);
+    // Fall back to localStorage
+    entries = JSON.parse(localStorage.getItem('dukasmart_entries') || '[]');
+    renderAll();
+  }
+}
+
+async function saveEntry(entry) {
+  try {
+    const res = await fetch(API + '/api/entries', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(entry)
+    });
+    if (!res.ok) throw new Error('Save failed');
+    const saved = await res.json();
+    // Also cache locally
+    localStorage.setItem('dukasmart_entries', JSON.stringify(entries));
+    return saved;
+  } catch (err) {
+    // Offline fallback
+    localStorage.setItem('dukasmart_entries', JSON.stringify(entries));
+    return entry;
+  }
+}
+
+async function deleteEntryAPI(id) {
+  try {
+    await fetch(API + '/api/entries/' + id, { method: 'DELETE' });
+  } catch (err) { /* offline, already removed locally */ }
+}
+
+async function loadConfig() {
+  try {
+    const res = await fetch(API + '/api/config');
+    if (res.ok) {
+      const remote = await res.json();
+      if (Object.keys(remote).length) {
+        cfg = Object.assign({}, DEFAULT_CFG, remote);
+        localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+      }
+    }
+  } catch (_) {}
+  applyConfig();
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderAll() { renderMetrics(); renderTodayList(); renderTable(); renderDateFilter(); renderCatFilter(); }
+
+function applyConfig() {
+  document.title = cfg.storeName + ' — Daily Purchases';
+  document.querySelectorAll('.logo')[0].innerHTML = `<span class="logo-dot"></span>${cfg.storeName.replace(/(\w+)$/, '<span>$1</span>')}`;
+  document.getElementById('store-tagline').textContent = cfg.tagline;
+  const catSel = document.getElementById('f-category');
+  catSel.innerHTML = '<option value="">Select category…</option>' + cfg.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  const dl = document.getElementById('product-suggestions');
+  dl.innerHTML = cfg.products.map(p => `<option value="${p}">`).join('');
+  renderAll();
+}
+
+function renderMetrics() {
+  const td = today();
+  const todayE = entries.filter(e => e.date === td);
+  const spend = todayE.reduce((a,e) => a+e.total, 0);
+  const items = todayE.reduce((a,e) => a+Number(e.qty), 0);
+  const cats = new Set(todayE.map(e => e.category)).size;
+  const month = new Date().toISOString().slice(0,7);
+  const monthSpend = entries.filter(e => e.date && e.date.startsWith(month)).reduce((a,e) => a+e.total, 0);
+  document.getElementById('m-spend').textContent = fmt(spend);
+  document.getElementById('m-items').textContent = Math.round(items*100)/100;
+  document.getElementById('m-cats').textContent = cats;
+  document.getElementById('m-month').textContent = fmt(monthSpend);
+}
+
+function catColor(name) { const c = cfg.categories.find(x => x.name===name); return c ? c.color : '#888'; }
+
+function renderCatChips() {
+  const wrap = document.getElementById('cat-chips');
+  wrap.innerHTML = `<div class="chip ${activeCat===''?'active':''}" data-cat="" onclick="filterCat(this,'')">All</div>` +
+    cfg.categories.map(c => `<div class="chip ${activeCat===c.name?'active':''}" data-cat="${c.name}" onclick="filterCat(this,'${c.name}')" style="${activeCat===c.name?`background:${c.color}22;border-color:${c.color};color:${c.color}`:''}">
+      ${c.name}</div>`).join('');
+}
+
+function filterCat(el, cat) { activeCat = cat; renderCatChips(); renderTodayList(); }
+
+function renderTodayList() {
+  const td = today();
+  let list = entries.filter(e => e.date === td);
+  if (activeCat) list = list.filter(e => e.category === activeCat);
+  list = list.slice().reverse();
+  const wrap = document.getElementById('entry-list');
+  if (!list.length) { wrap.innerHTML = '<div class="empty-state">No purchases yet today</div>'; return; }
+  wrap.innerHTML = list.map(e => `
+    <div class="entry-item">
+      <div class="entry-color" style="background:${catColor(e.category)}"></div>
+      <div class="entry-info">
+        <div class="entry-name">${e.product}</div>
+        <div class="entry-meta">${e.qty} ${e.unit} · ${e.category||'Uncategorised'} · ${e.payment}</div>
+      </div>
+      <div class="entry-amount">${fmt(e.total)}</div>
+      <button class="btn-del" onclick="deleteEntry('${e.id}')" title="Delete">✕</button>
+    </div>`).join('');
+}
+
+function payBadge(p) {
+  if (!p) return '<span class="pay-badge other">—</span>';
+  const lower = p.toLowerCase();
+  if (lower.includes('mpesa') || lower.includes('m-pesa')) return `<span class="pay-badge mpesa">📱 M-Pesa</span>`;
+  if (lower.includes('cash')) return `<span class="pay-badge cash">💵 Cash</span>`;
+  if (lower.includes('bank')) return `<span class="pay-badge bank">🏦 Bank</span>`;
+  return `<span class="pay-badge other">${p}</span>`;
+}
+
+function renderTable() {
+  const search = (document.getElementById('tbl-search').value||'').toLowerCase();
+  const dateF = document.getElementById('tbl-date').value;
+  const catF = document.getElementById('tbl-cat').value;
+  let data = entries.slice().reverse();
+  if (search) data = data.filter(e => (e.product+e.supplier+e.notes+e.category).toLowerCase().includes(search));
+  if (dateF) data = data.filter(e => e.date===dateF);
+  if (catF) data = data.filter(e => e.category===catF);
+  const body = document.getElementById('tbl-body');
+  if (!data.length) { body.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--muted);">No records found</td></tr>`; return; }
+  body.innerHTML = data.map(e => `
+    <tr>
+      <td style="white-space:nowrap;">${e.date}</td>
+      <td style="font-weight:500;">${e.product}</td>
+      <td><span class="cat-badge" style="background:${catColor(e.category)}22;color:${catColor(e.category)};">${e.category||'—'}</span></td>
+      <td>${e.qty} ${e.unit}</td>
+      <td>${fmt(e.price)}</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:700;color:#FFD23F;">${fmt(e.total)}</td>
+      <td>${payBadge(e.payment)}</td>
+      <td>${e.supplier||'—'}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:0.8rem;">${e.notes||''}</td>
+      <td><button class="btn-del" onclick="deleteEntry('${e.id}')">✕</button></td>
+    </tr>`).join('');
+}
+
+function renderDateFilter() {
+  const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
+  const el = document.getElementById('tbl-date');
+  el.innerHTML = '<option value="">All dates</option>' + dates.map(d => `<option value="${d}">${d}</option>`).join('');
+}
+
+function renderCatFilter() {
+  const el = document.getElementById('tbl-cat');
+  el.innerHTML = '<option value="">All categories</option>' + cfg.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+}
+
+// ─── Add / Delete Entries ─────────────────────────────────────────────────────
+async function handleAddEntry() {
+  const date = document.getElementById('f-date').value;
+  const product = document.getElementById('f-product').value.trim();
+  const category = document.getElementById('f-category').value;
+  const unit = document.getElementById('f-unit').value;
+  const qty = parseFloat(document.getElementById('f-qty').value);
+  const price = parseFloat(document.getElementById('f-price').value);
+  const payment = document.getElementById('f-payment').value;
+  const supplier = document.getElementById('f-supplier').value.trim();
+  const notes = document.getElementById('f-notes').value.trim();
+
+  if (!date) { alert('Please select a date.'); return; }
+  if (!product) { alert('Please enter a product name.'); return; }
+  if (!qty || qty<=0) { alert('Enter a valid quantity.'); return; }
+  if (!price || price<0) { alert('Enter a valid price.'); return; }
+
+  const entry = { id: Date.now().toString(), date, product, category, unit, qty, price, total: qty*price, payment, supplier, notes };
+
+  // If M-Pesa selected → open payment modal first
+  if (payment === 'M-Pesa') {
+    pendingEntry = entry;
+    openMpesaModal(entry.total, product);
+    return;
+  }
+
+  await commitEntry(entry);
+}
+
+async function commitEntry(entry) {
+  const btn = document.getElementById('btn-add');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  const saved = await saveEntry(entry);
+  entry.id = saved.id || entry.id;
+  entries.push(entry);
+  renderAll();
+  // Reset form
+  document.getElementById('f-product').value = '';
+  document.getElementById('f-qty').value = '1';
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-supplier').value = '';
+  document.getElementById('line-total').textContent = cfg.currency + ' 0.00';
+  btn.disabled = false;
+  btn.textContent = '+ Record Purchase';
+  showToast('✓ Purchase recorded!');
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  entries = entries.filter(e => e.id !== id);
+  await deleteEntryAPI(id);
+  renderAll();
+  showToast('Entry deleted');
+}
+
+// ─── M-Pesa STK Push ─────────────────────────────────────────────────────────
+function openMpesaModal(amount, product) {
+  document.getElementById('mpesa-display-amount').textContent = fmt(amount);
+  document.getElementById('mpesa-phone').value = '';
+  document.getElementById('mpesa-form-section').style.display = '';
+  document.getElementById('mpesa-status-section').style.display = 'none';
+  document.getElementById('mpesa-modal').classList.add('open');
+}
+
+function closeMpesaModal() {
+  document.getElementById('mpesa-modal').classList.remove('open');
+  clearInterval(mpesaPollTimer);
+  pendingEntry = null;
+  mpesaCheckoutId = null;
+}
+
+async function sendMpesaPayment() {
+  const phone = document.getElementById('mpesa-phone').value.trim();
+  if (!phone) { alert('Enter a phone number'); return; }
+  if (!pendingEntry) return;
+
+  const btn = document.getElementById('btn-mpesa-send');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    const res = await fetch(API + '/api/mpesa/pay', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        phone,
+        amount: Math.ceil(pendingEntry.total),
+        entryRef: pendingEntry.product
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'STK Push failed');
+
+    mpesaCheckoutId = data.checkoutRequestId;
+    showMpesaStatus('pending');
+    startPolling();
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '📲 Send Payment Request';
+    showToast('M-Pesa error: ' + err.message, true);
+  }
+}
+
+function showMpesaStatus(status, receipt) {
+  document.getElementById('mpesa-form-section').style.display = 'none';
+  document.getElementById('mpesa-status-section').style.display = '';
+  const el = document.getElementById('mpesa-status-content');
+  if (status === 'pending') {
+    el.innerHTML = `<div class="spinner"></div><h3>Waiting for payment…</h3><p>Check your phone and enter your M-Pesa PIN to confirm</p>`;
+  } else if (status === 'success') {
+    el.innerHTML = `<div class="status-icon">✅</div><h3 style="color:#00C457">Payment Confirmed!</h3><p>Receipt: <strong>${receipt||''}</strong><br>Purchase has been recorded.</p>`;
+  } else {
+    el.innerHTML = `<div class="status-icon">❌</div><h3 style="color:var(--c5)">Payment Failed</h3><p>The customer cancelled or timed out.<br>You can try again or choose a different payment method.</p>`;
+  }
+}
+
+function startPolling() {
+  let attempts = 0;
+  mpesaPollTimer = setInterval(async () => {
+    attempts++;
+    if (attempts > 30) { // 1 minute timeout
+      clearInterval(mpesaPollTimer);
+      showMpesaStatus('failed');
+      return;
+    }
+    try {
+      const res = await fetch(API + '/api/mpesa/status/' + mpesaCheckoutId);
+      if (!res.ok) return;
+      const tx = await res.json();
+      if (tx.status === 'success') {
+        clearInterval(mpesaPollTimer);
+        showMpesaStatus('success', tx.mpesaReceiptNumber);
+        // Add M-Pesa receipt to notes and commit
+        pendingEntry.notes = (pendingEntry.notes ? pendingEntry.notes + ' | ' : '') + 'M-Pesa: ' + (tx.mpesaReceiptNumber || '');
+        await commitEntry(pendingEntry);
+        setTimeout(closeMpesaModal, 3000);
+      } else if (tx.status === 'failed') {
+        clearInterval(mpesaPollTimer);
+        showMpesaStatus('failed');
+      }
+    } catch (_) {}
+  }, 2000);
+}
+
+// ─── CSV Export ───────────────────────────────────────────────────────────────
+function exportCSV() {
+  const header = ['Date','Product','Category','Qty','Unit','Unit Price','Total','Payment','Supplier','Notes'];
+  const rows = entries.map(e => [e.date,e.product,e.category,e.qty,e.unit,e.price,e.total,e.payment,e.supplier,e.notes]);
+  const csv = [header,...rows].map(r => r.map(x => `"${String(x||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'purchases_' + today() + '.csv';
+  a.click();
+  showToast('CSV exported!');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+['f-qty','f-price'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    const q = parseFloat(document.getElementById('f-qty').value)||0;
+    const p = parseFloat(document.getElementById('f-price').value)||0;
+    document.getElementById('line-total').textContent = fmt(q*p);
+  });
+});
+
+function updateNavDate() {
+  document.getElementById('nav-date').textContent = new Date().toLocaleDateString('en-KE', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+setInterval(updateNavDate, 60000);
+updateNavDate();
+document.getElementById('f-date').value = today();
+
+// Listen for config changes from admin panel
+window.addEventListener('storage', e => {
+  if (e.key === CFG_KEY) {
+    cfg = Object.assign({}, DEFAULT_CFG, JSON.parse(e.newValue||'{}'));
+    applyConfig();
+  }
+});
+
+// Boot
+loadConfig().then(() => loadEntries());
+</script>
+</body>
+</html>
